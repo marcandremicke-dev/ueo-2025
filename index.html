@@ -217,5 +217,92 @@
   // ===== Init: shared route /t/:id =====
   (function init(){ const parts = location.pathname.split('/').filter(Boolean); if(parts[0]==='t' && parts[1]){ apiLoad(parts[1]); } })();
   </script>
+  
+<script>
+  // Warte, bis das DOM geladen ist (damit #btnShare existiert)
+  document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('btnShare');
+    if (!btn) {
+      console.warn('btnShare nicht gefunden');
+      return;
+    }
+
+    btn.addEventListener('click', async () => {
+      try {
+        // TODO: Passe diese Ermittlung an deine echte Turnier-Logik an:
+        // "slug" ist der Schlüssel unter dem gespeichert wird (nur Kleinbuchstaben/Ziffern/-/_)
+        const slug = getCurrentTournamentSlug();  // unten definiert
+        // "pathOrUrl" ist die Seite/URL, die geteilt werden soll (aktuelle Seite als Beispiel)
+        const pathOrUrl = getShareTargetPath();   // unten definiert
+
+        if (!slug) {
+          alert('Kein Slug gefunden – bitte Turnier-ID festlegen.');
+          return;
+        }
+        if (!pathOrUrl) {
+          alert('Kein Link-Ziel gefunden.');
+          return;
+        }
+
+        // Aus einem relativen Pfad eine ABSOLUTE URL bauen (Backend verlangt absolute URL!)
+        const absoluteUrl = new URL(pathOrUrl, window.location.origin).href;
+
+        // Netlify Function aufrufen (mit Punkt im Pfad!)
+        const resp = await fetch('/.netlify/functions/create', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            slug: String(slug).trim().toLowerCase(),
+            url: absoluteUrl
+          })
+        });
+
+        if (!resp.ok) {
+          const text = await resp.text().catch(() => '');
+          throw new Error(`HTTP ${resp.status}: ${text || resp.statusText}`);
+        }
+
+        const data = await resp.json(); // { slug, url }
+        const shareUrl = data.url;
+
+        // Optional: Link in die Zwischenablage kopieren
+        try { await navigator.clipboard.writeText(shareUrl); } catch {}
+        alert('Turnier-Link erzeugt und kopiert:\n' + shareUrl);
+      } catch (err) {
+        console.error('Fehler beim Erzeugen des Turnier-Links:', err);
+        alert('Fehler beim Erzeugen des Turnier-Links');
+      }
+    });
+  });
+
+  // --- Hilfsfunktionen: hier kannst du deine echte Logik einsetzen ---
+  function getCurrentTournamentSlug() {
+    // Beispiel: lies aus einem Input-Feld mit id="tournamentId", sonst Fallback
+    const el = document.querySelector('#tournamentId');
+    const raw = (el?.value || '').trim();
+    if (raw) return slugify(raw);
+    // Fallback: generiere einen einfachen Slug
+    const date = new Date();
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `ueo-${y}${m}${d}`;
+  }
+
+  function getShareTargetPath() {
+    // Beispiel: aktuelle Seite inkl. Query als Ziel
+    return window.location.pathname + window.location.search;
+  }
+
+  function slugify(s) {
+    return String(s)
+      .toLowerCase()
+      .normalize('NFKD')
+      .replace(/[^\w\- ]+/g, '')  // Sonderzeichen entfernen
+      .replace(/\s      .replace(/\s+/g, '-')       // Leerzeichen -> Bindestrich
+      .replace(/-+/g, '-')        // Mehrfache Bindestriche glätten
+      .replace(/^-|-$/g, '');     // vorne/hinten entfernen
+  }
+
 </body>
 </html>
