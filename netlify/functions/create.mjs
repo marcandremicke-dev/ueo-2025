@@ -26,7 +26,7 @@ export const handler = async (event) => {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         error: 'Server error',
-        detail: err?.message ??        detail: err?.message ?? String(err)
+               detail: err?.message ?? String(err)
       })
     };
   }
