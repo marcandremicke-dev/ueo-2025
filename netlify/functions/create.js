@@ -1,10 +1,11 @@
-\
+
+// netlify/functions/create.js
 import { connectLambda, getStore } from '@netlify/blobs';
 
 function makeId(len = 8) {
   const chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789';
   let out = '';
-  for (let i = 0; i < len; i++) out += chars[Math.floor(Math.random()*chars.length)];
+  for (let i = 0; i < len; i++) out += chars[Math.floor(Math.random() * chars.length)];
   return out;
 }
 
@@ -19,11 +20,9 @@ export const handler = async (event) => {
 
     const store = getStore({ name: 'padel-fast4', consistency: 'strong' });
 
-    // generate unique id
+    // id generieren (kleiner Kollisionsschutz)
     let id = makeId();
-    // naive collision check
-    const existing = await store.getJSON(`t/${id}`);
-    if (existing) id = makeId();
+    if (await store.getJSON(`t/${id}`)) id = makeId();
 
     const doc = {
       v: 1,
@@ -40,6 +39,5 @@ export const handler = async (event) => {
 
     return { statusCode: 200, body: JSON.stringify({ id, url }) };
   } catch (e) {
-    return { statusCode: 500, body: JSON.stringify({ error: 'Server error', detail: String(e) }) };
+    return { statusCode: 500, body: JSON.stringify({ error: 'Server error', detail:    return { statusCode: 500, body: JSON.stringify({ error: 'Server error', detail: String(e) }) };
   }
-}
