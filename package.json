@@ -1,12 +1,8 @@
-
 {
   "name": "ueo-2025",
   "version": "1.0.0",
   "private": true,
   "type": "module",
   "dependencies": {
-    "@netlify/blobs": "^10.0.10"
-  },
-  "engines": {
-    "node": ">=18"
+    "@net    "@netlify/blobs": "^10.0.10"
   }
