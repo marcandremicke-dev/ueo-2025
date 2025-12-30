@@ -6,6 +6,6 @@
 [functions]
   node_bundler = "esbuild"
 
-[[redirect[[redirects]]
+[redirect]
   from = "/t/*"
   to = "/"
