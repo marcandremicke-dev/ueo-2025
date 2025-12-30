@@ -4,5 +4,6 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@net    "@netlify/blobs": "^10.0.10"
+    "@netlify/blobs": "^10.0.10"
   }
+}
