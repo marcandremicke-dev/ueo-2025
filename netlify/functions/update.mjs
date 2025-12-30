@@ -25,10 +25,10 @@ export const handler = async (event) => {
   } catch (err) {
     return {
       statusCode: 500,
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': '      headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         error: 'Server error',
         detail: err?.message ?? String(err)
-           })
+      })
     };
   }
