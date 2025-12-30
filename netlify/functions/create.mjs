@@ -1,4 +1,5 @@
 
+// netlify/functions/create.mjs
 import { getStore } from '@netlify/blobs';
 
 export const handler = async (event) => {
@@ -28,12 +29,10 @@ export const handler = async (event) => {
       }
     }
 
-    // base validieren & normalisieren
     const baseInput = body.base || 'https://example.com';
     let base;
     try {
       const u = new URL(baseInput);
-      // Trailing slash entfernen
       base = `${u.origin}${u.pathname}`.replace(/\/+$/, '');
     } catch {
       return {
@@ -43,13 +42,12 @@ export const handler = async (event) => {
       };
     }
 
-    // Slug generieren (hier simpel; bei Bedarf kollisionssicher machen)
     const slug = Math.random().toString(36).slice(2, 8);
     const url = `${base}/${slug}`;
 
     // WICHTIG: getStore ist async
-    const store = await getStore('links'); // oder await getStore({ name: 'links' });
-    await store.set(slug, url); // Speichert den String unter dem Key "slug"
+    const store = await getStore('links'); // oder: await getStore({ name: 'links' });
+    await store.set(slug, url);
 
     return {
       statusCode: 200,
@@ -61,8 +59,9 @@ export const handler = async (event) => {
       statusCode: 500,
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
-        error: '        error: 'Server error',
+        error: 'Server error',
         detail: err?.message ?? String(err)
       })
     };
   }
+};
