@@ -9,17 +9,22 @@ export const handler = async (event) => {
         statusCode: 405,
         headers: {
           'content-type': 'text/plain; charset=utf-8',
-          'allow': 'PUT, PATCH'
+          'Allow': 'PUT, PATCH' // Konventionell großgeschrieben
         },
         body: 'Method Not Allowed'
       };
     }
 
-    // Body parsen
+    // Body parsen (Base64 optional berücksichtigen)
+    let rawBody = event.body || '';
+    if (event.isBase64Encoded) {
+      rawBody = Buffer.from(rawBody, 'base64').toString('utf8');
+    }
+
     let body = {};
-    if (event.body) {
+    if (rawBody) {
       try {
-        body = JSON.parse(event.body);
+        body = JSON.parse(rawBody);
       } catch {
         return {
           statusCode: 400,
@@ -38,11 +43,12 @@ export const handler = async (event) => {
       };
     }
 
-    // URL validieren
+    // URL validieren & normalisieren ohne Reassignment von const
+    let normalizedUrl;
     try {
       const u = new URL(url);
-      // optional: normalisieren
-      url = `${u.origin}${u.pathname}${u.search}`; // wenn du keine Hashes willst
+      // optional: normalisieren (ohne Hash)
+      normalizedUrl = `${u.origin}${u.pathname}${u.search}`;
     } catch {
       return {
         statusCode: 400,
@@ -52,20 +58,22 @@ export const handler = async (event) => {
     }
 
     const store = await getStore('links');
-    await store.set(slug, url);
+    await store.set(slug, normalizedUrl);
 
     return {
       statusCode: 200,
       headers: { 'content-type': 'application/json; charset=utf-8' },
-      body: JSON.stringify({ slug, url })
+      body: JSON.stringify({ slug, url: normalizedUrl })
     };
   } catch (err) {
     return {
       statusCode: 500,
-           headers: { 'content-type': 'application/json; charset=utf-8' },
+      headers: { 'content-type': 'application/json; charset=utf-8' },
       body: JSON.stringify({
         error: 'Server error',
         detail: err?.message ?? String(err)
       })
     };
   }
+};
+``
