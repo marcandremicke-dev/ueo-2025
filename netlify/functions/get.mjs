@@ -3,16 +3,17 @@ import { getStore } from '@netlify/blobs';
 
 export const handler = async (event) => {
   try {
-    // slug kann als Query    if (!slug) {    // slug kann als Query ?slug=abc oder als Pfad /get/abc kommen
-      return { statusCode: 400, body: 'Missing slug' };
+    if (event.httpMethod !== 'POST') {
+      return { statusCode: 405, body: 'Method Not Allowed' };
     }
+
+    const body = event.body ? JSON.parse(event.body) : {};
+    const base = body.base || 'https://example.com';
+    const slug = Math.random().toString(36).slice(2, 8);
+    const url = `${base}/${slug}`;
 
     const store = getStore('links');
-    const url = await store.get(slug, { type: 'text' }); // null, falls nicht vorhanden
-
-    if (!url) {
-      return { statusCode: 404, body: 'Not found' };
-    }
+    await store.set(slug, url);
 
     return {
       statusCode: 200,
@@ -23,15 +24,9 @@ export const handler = async (event) => {
     return {
       statusCode: 500,
       headers: { 'content-type': 'application/json' },
-           body: JSON.stringify({
+      body: JSON.stringify({
         error: 'Server error',
-        detail: err?.message ?? String(err)
+        detail: err?.message ??        detail: err?.message ?? String(err)
       })
     };
   }
-
-    const slug =
-      event.queryStringParameters?.slug ||
-      event.path?.split('/').pop() ||
-      '';
-
