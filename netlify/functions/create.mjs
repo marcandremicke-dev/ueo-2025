@@ -1,43 +1,32 @@
 
-// netlify/functions/create.js
-import { connectLambda, getStore } from '@netlify/blobs';
-
-function makeId(len = 8) {
-  const chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789';
-  let out = '';
-  for (let i = 0; i < len; i++) out += chars[Math.floor(Math.random() * chars.length)];
-  return out;
-}
+import { getStore } from '@netlify/blobs';
 
 export const handler = async (event) => {
   try {
-    connectLambda(event);
-    const body = JSON.parse(event.body || '{}');
-    const { teams, matches } = body;
-    if (!Array.isArray(teams) || !Array.isArray(matches)) {
-      return { statusCode: 400, body: JSON.stringify({ error: 'Invalid payload' }) };
+    if (event.httpMethod !== 'POST') {
+      return { statusCode: 405, body: 'Method Not Allowed' };
     }
 
-    const store = getStore({ name: 'padel-fast4', consistency: 'strong' });
+    const body = event.body ? JSON.parse(event.body) : {};
+    const base = body.base || 'https://example.com';
+    const slug = Math.random().toString(36).slice(2, 8);
+    const url = `${base}/${slug}`;
 
-    // id generieren (kleiner Kollisionsschutz)
-    let id = makeId();
-    if (await store.getJSON(`t/${id}`)) id = makeId();
+    const store = getStore('links');
+    await store.set(slug, url);
 
-    const doc = {
-      v: 1,
-      lockTeamNames: true,
-      teams,
-      matches,
-      createdAt: new Date().toISOString()
+    return {
+      statusCode: 200,
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ slug, url })
     };
-    await store.setJSON(`t/${id}`, doc);
-
-    const proto = event.headers['x-forwarded-proto'] || 'https';
-    const host = event.headers['x-forwarded-host'] || event.headers.host;
-    const url = `${proto}://${host}/t/${id}`;
-
-    return { statusCode: 200, body: JSON.stringify({ id, url }) };
-  } catch (e) {
-    return { statusCode: 500, body: JSON.stringify({ error: 'Server error', detail:    return { statusCode: 500, body: JSON.stringify({ error: 'Server error', detail: String(e) }) };
+  } catch (err) {
+    return {
+      statusCode: 500,
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+               error: 'Server error',
+        detail: err?.message ?? String(err)
+      })
+    };
   }
