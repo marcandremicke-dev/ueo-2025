@@ -1,9 +1,5 @@
+
 {
-  "name": "unforced-errors-open-2025",
-  "version": "1.0.0",
-  "private": true,
   "type": "module",
-  "dependencies": {
-    "@netlify/blobs": "^10.0.10"
-  }
+  "dependencies": { "@netlify/blobs": "^10.0.10" }
 }
