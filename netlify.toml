@@ -1,7 +1,8 @@
-build]
+[build]
   publish = "."
-   functions = "netlify/functions"
+  functions = "netlify/functions"
 
 [[redirects]]
   from = "/t/*"
   to = "/"
+  status = 200
