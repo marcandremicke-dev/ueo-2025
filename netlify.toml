@@ -2,7 +2,9 @@
   publish = "."
   functions = "netlify/functions"
 
+[functions]
+  node  node_bundler = "esbuild"
+
 [[redirects]]
   from = "/t/*"
   to = "/"
-  status = 200
